@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Inventario</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #CCC;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .btn {
+            margin-left: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .btn-edit {
+            background-color: #ffc107;
+            border: none;
+            color: #fff;
+        }
+        .btn-delete {
+            background-color: #dc3545;
+            border: none;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Gestión de Inventario</h1>
+    <form id="productForm">
+        <input type="text" id="productName" placeholder="Nombre del producto" required>
+        <input type="number" id="productPrice" placeholder="Precio" required min="0" step="0.01">
+        <input type="number" id="productQuantity" placeholder="Cantidad" required min="0">
+        <button type="submit">Agregar Producto</button>
+    </form>
+
+    <h2>Total del Inventario: $<span id="totalValue">0.00</span></h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Precio</th>
+                <th>Cantidad</th>
+                <th>Total</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="listaProductos"></tbody>
+    </table>
+
+    <script>
+        const productForm = document.getElementById('productForm');
+        const productTable = document.getElementById('listaProductos');
+        const totalValueElement = document.getElementById('totalValue');
+
+        let products = JSON.parse(localStorage.getItem('products')) || [];
+
+        function updateTotalValue() {
+            const totalValue = products.reduce((total, product) => total + (product.price * product.quantity), 0);
+            totalValueElement.textContent = totalValue.toFixed(2);
+        }
+
+        function renderProducts() {
+            productTable.innerHTML = ''; // Limpiar la tabla
+            products.forEach((product, index) => {
+                const row = productTable.insertRow();
+                row.innerHTML = `
+                    <td>${product.name}</td>
+                    <td>$${product.price.toFixed(2)}</td>
+                    <td>${product.quantity}</td>
+                    <td>$${(product.price * product.quantity).toFixed(2)}</td>
+                    <td>
+                        <button class="btn btn-edit" onclick="editProduct(${index})">Editar</button>
+                        <button class="btn btn-delete" onclick="deleteProduct(${index})">Eliminar</button>
+                    </td>
+                `;
+            });
+            updateTotalValue();
+        }
+
+        function addProduct(event) {
+            event.preventDefault();
+            const name = document.getElementById('productName').value;
+            const price = parseFloat(document.getElementById('productPrice').value);
+            const quantity = parseInt(document.getElementById('productQuantity').value);
+
+            if (name && !isNaN(price) && !isNaN(quantity)) {
+                products.push({ name, price, quantity });
+                localStorage.setItem('products', JSON.stringify(products));
+                renderProducts();
+                productForm.reset();
+            }
+        }
+
+        function editProduct(index) {
+            const product = products[index];
+            document.getElementById('productName').value = product.name;
+            document.getElementById('productPrice').value = product.price;
+            document.getElementById('productQuantity').value = product.quantity;
+            deleteProduct(index);
+        }
+
+        function deleteProduct(index) {
+            products.splice(index, 1);
+            localStorage.setItem('products', JSON.stringify(products));
+            renderProducts();
+        }
+
+        productForm.addEventListener('submit', addProduct);
+        renderProducts();
+    </script>
+</body>
+</html>
